@@ -1,0 +1,94 @@
+---
+title: "lab01"
+author: "Sean Fitch"
+date: "2024-09-13"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load EPI dataset
+
+```{r}
+EPI_data <- read.csv("./epi2024results06022024.csv")
+```
+
+```{r}
+summary(EPI_data$EPI.new) # stats
+fivenum(EPI_data$EPI.new,na.rm=TRUE)
+stem(EPI_data$EPI.new) # stem and leaf plot
+```
+```{r}
+boxplot(EPI_data$EPI.new, EPI_data$APO.new) 
+```
+```{r}
+hist(EPI_data$EPI.new, seq(20., 80., 1.0), prob=TRUE)
+lines (density(EPI_data$EPI.new,na.rm=TRUE,bw=1.))
+rug(EPI_data$EPI.new) 
+hist(EPI_data$EPI.new, seq(20., 80., 1.0), prob=TRUE)
+lines (density(EPI_data$EPI.new,na.rm=TRUE,bw='SJ'))
+rug(EPI_data$EPI.new) 
+```
+
+```{r}
+hist(EPI_data$EPI.new, seq(20., 80., 1.0), prob=TRUE)
+lines (density(EPI_data$EPI.new,na.rm=TRUE,bw='SJ'))
+rug(EPI_data$EPI.new)
+
+x<-seq(20,80,1)
+q<- dnorm(x,mean=42, sd=5,log=FALSE)
+lines(x,q)
+lines(x,.4*q)
+q<-dnorm(x,mean=65, sd=5,log=FALSE)
+lines(x,.12*q)
+```
+```{r}
+plot(ecdf(EPI_data$EPI.new), do.points=FALSE, verticals=TRUE) 
+qqnorm(EPI_data$EPI.new); qqline(EPI_data$EPI.new)
+qqplot(rnorm(250), EPI_data$EPI.new, xlab = "Q-Q plot for norm dsn")
+qqline(EPI_data$EPI.new)
+qqplot(rt(250, df = 5), EPI_data$EPI.new, xlab = "Q-Q plot for t dsn")
+qqline(EPI_data$EPI.new)
+```
+API variable:
+```{r}
+summary(EPI_data$WRS.new) # stats
+fivenum(EPI_data$WRS.new,na.rm=TRUE)
+stem(EPI_data$WRS.new) # stem and leaf plot
+```
+```{r}
+boxplot(EPI_data$WRS.new, EPI_data$APO.new) 
+```
+```{r}
+hist(EPI_data$WRS.new, seq(0., 100., 5.0), prob=TRUE)
+lines (density(EPI_data$WRS.new,na.rm=TRUE,bw=1.))
+rug(EPI_data$WRS.new) 
+hist(EPI_data$WRS.new, seq(0., 100., 5.0), prob=TRUE)
+lines (density(EPI_data$WRS.new,na.rm=TRUE,bw='SJ'))
+rug(EPI_data$WRS.new) 
+```
+```{r}
+hist(EPI_data$WRS.new, seq(0., 100., 5.0), prob=TRUE)
+lines (density(EPI_data$WRS.new,na.rm=TRUE,bw='SJ'))
+rug(EPI_data$WRS.new)
+
+x<-seq(20,80,1)
+q<- dnorm(x,mean=42, sd=5,log=FALSE)
+lines(x,q)
+lines(x,.4*q)
+q<-dnorm(x,mean=65, sd=5,log=FALSE)
+lines(x,.12*q)
+```
+```{r}
+plot(ecdf(EPI_data$WRS.new), do.points=FALSE, verticals=TRUE) 
+qqnorm(EPI_data$WRS.new); qqline(EPI_data$WRS.new)
+qqplot(rnorm(250), EPI_data$WRS.new, xlab = "Q-Q plot for norm dsn")
+qqline(EPI_data$WRS.new)
+qqplot(rt(250, df = 5), EPI_data$WRS.new, xlab = "Q-Q plot for t dsn")
+qqline(EPI_data$WRS.new)
+```
