@@ -1,0 +1,87 @@
+---
+title: "lab02"
+author: "Sean Fitch"
+date: "2024-09-20"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+EPI_data <- read.csv("../epi2024results06022024.csv")
+epi.results <- read.csv("../epi2024results06022024.csv", header=TRUE)
+epi.weights <- read.csv("../epi2024weights.csv")
+attach(EPI_data)
+```
+
+```{r}
+qqplot(qnorm(ppoints(200)),BDH.new)
+qqline(BDH.new)
+
+plot(ecdf(rnorm(10000, 45, 10)), do.points=FALSE)
+lines(ecdf(CCH.new))
+
+plot(ecdf(rchisq(10000, 45)), do.points=FALSE)
+lines(ecdf(CCH.new))
+```
+
+Create population data set
+```{r}
+# read data
+populations_2023 <- read.csv("../countries_populations_2023.csv")
+# drop countries not in epi results
+populations <- populations_2023[-which(!populations_2023$Country %in% epi.results$country),]
+# sort populations by country
+populations <- populations[order(populations$Country),]
+# drop countries not in populations
+epi.results.sub <- epi.results[-which(!epi.results$country %in% populations$Country),]
+# sort epi results by country
+epi.results.sub <- epi.results.sub[order(epi.results.sub$country),]
+# only keep necessary columns
+# epi.results.sub <- epi.results.sub[,c("country","EPI.old","EPI.new")]
+# convert population to numeric
+epi.results.sub$population <- as.numeric(populations$Population)
+# compute population log base 10
+epi.results.sub$population_log <- log10(epi.results.sub$population)
+```
+
+```{r}
+attach(epi.results.sub)
+lin.mod.epinew <- lm(ECO.new~population_log,epi.results.sub)
+plot(ECO.new~population_log)
+abline(lin.mod.epinew)
+summary(lin.mod.epinew)
+plot(lin.mod.epinew)
+ggplot(epi.results.sub, aes(x = population_log, y = ECO.new)) +
+geom_point() +
+stat_smooth(method = "lm")
+ggplot(lin.mod.epinew, aes(x = .fitted, y = .resid)) +
+geom_point() +
+geom_hline(yintercept = 0) +
+labs(title='Residual vs. Fitted Values Plot', x='Fitted Values', y='Residuals')
+```
+
+```{r}
+attach(epi.results.sub)
+lin.mod.epinew <- lm(MKP.new~population_log,epi.results.sub)
+plot(MKP.new~population_log)
+abline(lin.mod.epinew)
+summary(lin.mod.epinew)
+plot(lin.mod.epinew)
+ggplot(epi.results.sub, aes(x = population_log, y = MKP.new)) +
+geom_point() +
+stat_smooth(method = "lm")
+ggplot(lin.mod.epinew, aes(x = .fitted, y = .resid)) +
+geom_point() +
+geom_hline(yintercept = 0) +
+labs(title='Residual vs. Fitted Values Plot', x='Fitted Values', y='Residuals')
+```
+
