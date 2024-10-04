@@ -1,0 +1,190 @@
+---
+title: "lab01"
+author: "Sean Fitch"
+date: "2024-10-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library("e1071")
+library("class")
+library("caret")
+library(stats)
+```
+
+
+# Load the results dataset
+
+```{r}
+# read data
+epi <- read.csv("../data/epi2024results_DA_F24_lab03.csv")
+```
+
+```{r}
+selected_regions <- epi %>%
+  distinct(region) %>%
+  slice_tail(n = 2) %>%
+  pull(region)
+
+epi %>%
+  filter(region %in% selected_regions) %>%
+  group_by(region) %>%
+  group_walk(~ {
+    region_name <- .y$region
+        EPI_data <- .x$EPI
+    
+    # Create a histogram
+    hist(EPI_data, breaks = seq(20, 80, 1.0), prob = TRUE, 
+         main = paste("Histogram for Region:", region_name), 
+         xlab = "EPI", ylab = "Density", col = "lightblue", border = "black")
+    
+    # Add the density line
+    lines(density(EPI_data, na.rm = TRUE, bw = 'SJ'))
+  })
+
+epi %>%
+  filter(region %in% selected_regions) %>%
+  group_by(region) %>%
+  group_walk(~ {
+    region_name <- .y$region
+    EPI_data <- .x$EPI
+    
+    # Create a histogram
+    hist(EPI_data, breaks = seq(20, 80, 1.0), prob = TRUE, 
+         main = paste("Histogram for Region:", region_name), 
+         xlab = "EPI", ylab = "Density", col = "lightblue", border = "black")
+    
+    # Add the density line
+    lines(density(EPI_data, na.rm = TRUE, bw = 'SJ'))
+  })
+```
+```{r}
+linear_model <- lm(EPI ~ WWT + WWR + HLT + AIR + HPE, data = epi)
+summary(linear_model)
+ggplot(epi, aes(x = HLT, y = AIR)) +
+  geom_point() +                
+  stat_smooth(method = "lm", aes(y = EPI)) +
+  theme_minimal()
+```
+HLT most significantly influences EPI.
+
+```{r}
+sub_saharan_africa_epi <- epi %>%
+  filter(region == "Sub-Saharan Africa")
+linear_model <- lm(EPI ~ WWT + WWR + HLT + AIR + HPE, data = sub_saharan_africa_epi)
+summary(linear_model)
+```
+
+The full model is a better fit. It captures more variance, as shown by and Adjusted R-Squared of 0.7259 versus 0.3521. It has higher residuals, but that can be explained by the variance of EPI being higher. It is also worth noting that the significance of predictors varies, implying there are different relationships between the predictors and EPI in different regions.
+
+```{r}
+epi.norm <- epi %>%
+  select(EPI, WWT, WWR, HLT, AIR)
+epi.norm <- as.data.frame(scale(epi.norm))
+epi.norm$region <- epi$region
+
+# Define the regions
+regions_a <- c("Latin America & Caribbean", "Asia-Pacific", "Eastern Europe")
+regions_b <- c("Sub-Saharan Africa", "Global West", "Greater Middle East")
+epi.norm.a <- epi.norm %>%
+  filter(region %in% regions_a)
+epi.norm.b <- epi.norm %>%
+  filter(region %in% regions_b)
+
+# Create a random sample of 80% of the data
+set.seed(123)  # Set seed for reproducibility
+sample_index.a <- sample(seq_len(nrow(epi.norm.a)), size = 0.8 * nrow(epi.norm.a))
+sample_index.b <- sample(seq_len(nrow(epi.norm.b)), size = 0.8 * nrow(epi.norm.b))
+train_a <- epi.norm.a[sample_index.a, ]
+test_a <- epi.norm.a[-sample_index.a, ]
+train_b <- epi.norm.b[sample_index.b, ]
+test_b <- epi.norm.b[-sample_index.b, ]
+
+KNNpred.a <- knn(train = train_a[1:5], test = test_a[1:5], cl = train_a$region)
+KNNpred.b <- knn(train = train_b[1:5], test = test_b[1:5], cl = train_b$region)
+
+```
+
+```{r}
+contingency_a <- table(Predicted = KNNpred.a, Actual = test_a$region)
+contingency_b <- table(Predicted = KNNpred.b, Actual = test_b$region)
+
+contingency_a
+contingency_b
+
+accuracy_a <- sum(diag(contingency_a)) / sum(contingency_a)
+accuracy_b <- sum(diag(contingency_b)) / sum(contingency_b)
+print(paste("Accuracy a:", round(accuracy_a * 100, 2)))
+print(paste("Accuracy b:", round(accuracy_b * 100, 2)))
+```
+
+The accuracy for region b is significantly greater. This is likely due to greater differences in the chosen columns between the regions chosen in the group.
+
+```{r}
+k_fold_kmeans <- function(data, k_values = seq(1, 20), k_folds = 10, seed = 123) {
+  # Set the seed for reproducibility
+  set.seed(seed)
+  
+  # Create a k-fold cross-validation partition
+  folds <- createFolds(data$region, k = k_folds, list = FALSE)
+  
+  # Initialize a vector to store WCSS for different k values
+  wcss_values <- numeric(length(k_values))
+  
+  # Loop through different values of k
+  for (i in seq_along(k_values)) {
+    k <- k_values[i]  # Get the current value of k
+    fold_wcss <- numeric(k_folds)  # Initialize vector to store WCSS for each fold
+    
+    # Loop through each fold
+    for (fold in seq_len(k_folds)) {
+      # Split the data into training and testing sets based on the fold
+      train_data <- data[folds != fold, ]
+      
+      # Perform K-means clustering on the training data
+      kmeans_model <- kmeans(train_data[, -ncol(train_data)], centers = k)
+      
+      # Calculate WCSS for this fold and store it
+      fold_wcss[fold] <- sum(kmeans_model$withinss)
+    }
+    
+    # Average WCSS across all folds for this k value
+    wcss_values[i] <- mean(fold_wcss)
+  }
+  
+  # Plot the WCSS vs. k values
+  plot(k_values, wcss_values, type = "b", pch = 19, col = "blue", lwd = 2,
+       xlab = "k (Number of Clusters)", ylab = "WCSS",
+       main = "K-Means WCSS vs. k (K-Fold CV)")
+  grid()  # Add grid lines
+}
+```
+
+
+```{r}
+epi.norm <- epi %>%
+  select(EPI, WWT, WWR, HLT, AIR)
+epi.norm <- as.data.frame(scale(epi.norm))
+epi.norm$region <- epi$region
+
+# Define the regions
+regions_a <- c("Latin America & Caribbean", "Asia-Pacific", "Eastern Europe")
+regions_b <- c("Sub-Saharan Africa", "Global West", "Greater Middle East")
+epi.norm.a <- epi.norm %>%
+  filter(region %in% regions_a)
+epi.norm.b <- epi.norm %>%
+  filter(region %in% regions_b)
+
+k_fold_kmeans(epi.norm.a)
+k_fold_kmeans(epi.norm.b)
+```
+With group a we see tighter clusters, with a wcss of ~65 at the elbow vs. ~100 for b. This either indicates less variance in group a or better separation of clusters.
