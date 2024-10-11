@@ -1,0 +1,62 @@
+```{r}
+if (!require("rmarkdown")) {
+  install.packages("rmarkdown")
+  library(rmarkdown)
+}
+if (!require("MASS")) {
+  install.packages("MASS")
+  library(MASS)
+}
+if (!require("ISLR")) {
+  install.packages("ISLR")
+  library(ISLR)
+}
+if (!require("corrplot")) {
+  install.packages("corrplot")
+  library(corrplot)
+}
+```
+
+Load Boston dataset:
+
+```{r}
+?Boston # help function with "?"
+head(Boston) # show the head of the dataset
+dim(Boston) # dimensions of the dataset
+names(Boston) # column names
+str(Boston) # str function shows the structure of the dataset
+nrow(Boston) # function shows the number of rows
+ncol(Boston) # function shows the number of columns
+summary(Boston) # summary() function shows the summary statistics
+summary(Boston$crim) # summary of the "crime" column in the Boston dataset
+```
+```{r}
+data(Auto)
+head(Auto)
+names(Auto)
+summary(Auto)
+summary(Auto$mpg)
+fivenum(Auto$mpg)
+boxplot(Auto$mpg)
+hist(Auto$mpg)
+summary(Auto$horsepower)
+summary(Auto$weight)
+fivenum(Auto$weight)
+boxplot(Auto$weight)
+mean(Auto$weight)
+median((Auto$weight))
+```
+```{r}
+data(Boston)
+
+# Compute the correlation matrix
+boston_corr <- cor(Boston)
+
+# Plot the correlation heatmap
+corrplot(boston_corr, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45, 
+         addCoef.col = "black", # Show correlation coefficients
+         number.cex = 0.7, 
+         col = colorRampPalette(c("blue", "white", "red"))(200))
+```
+

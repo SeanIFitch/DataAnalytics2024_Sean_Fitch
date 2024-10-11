@@ -16,9 +16,9 @@ library(ggplot2)
 ```
 
 ```{r}
-EPI_data <- read.csv("../epi2024results06022024.csv")
-epi.results <- read.csv("../epi2024results06022024.csv", header=TRUE)
-epi.weights <- read.csv("../epi2024weights.csv")
+EPI_data <- read.csv("../data/epi2024results06022024.csv")
+epi.results <- read.csv("../data/epi2024results06022024.csv", header=TRUE)
+epi.weights <- read.csv("../data/epi2024weights.csv")
 attach(EPI_data)
 ```
 
@@ -36,7 +36,7 @@ lines(ecdf(CCH.new))
 Create population data set
 ```{r}
 # read data
-populations_2023 <- read.csv("../countries_populations_2023.csv")
+populations_2023 <- read.csv("../data/countries_populations_2023.csv")
 # drop countries not in epi results
 populations <- populations_2023[-which(!populations_2023$Country %in% epi.results$country),]
 # sort populations by country

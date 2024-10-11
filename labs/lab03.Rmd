@@ -45,7 +45,7 @@ epi %>%
     # Create a histogram
     hist(EPI_data, breaks = seq(20, 80, 1.0), prob = TRUE, 
          main = paste("Histogram for Region:", region_name), 
-         xlab = "EPI", ylab = "Density", col = "lightblue", border = "black")
+         xlab = "EPI", ylab = "Density")
     
     # Add the density line
     lines(density(EPI_data, na.rm = TRUE, bw = 'SJ'))
@@ -58,13 +58,18 @@ epi %>%
     region_name <- .y$region
     EPI_data <- .x$EPI
     
-    # Create a histogram
-    hist(EPI_data, breaks = seq(20, 80, 1.0), prob = TRUE, 
-         main = paste("Histogram for Region:", region_name), 
-         xlab = "EPI", ylab = "Density", col = "lightblue", border = "black")
+    # Calculate the mean and standard deviation of the data
+    mean_EPI <- mean(EPI_data, na.rm = TRUE)
+    sd_EPI <- sd(EPI_data, na.rm = TRUE)
     
-    # Add the density line
-    lines(density(EPI_data, na.rm = TRUE, bw = 'SJ'))
+    # Create the Q-Q plot against a normal distribution
+    qqnorm(EPI_data, 
+           main = paste("Q-Q Plot for Region:", region_name), 
+           xlab = "Theoretical Quantiles", ylab = "Sample Quantiles",
+           pch = 19)
+    
+    # Add a Q-Q line for a normal distribution
+    qqline(EPI_data, distribution = qnorm, lwd = 2)
   })
 ```
 ```{r}

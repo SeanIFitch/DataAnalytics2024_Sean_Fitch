@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Load EPI dataset
 
 ```{r}
-EPI_data <- read.csv("./epi2024results06022024.csv")
+EPI_data <- read.csv("../data/epi2024results06022024.csv")
 ```
 
 ```{r}
